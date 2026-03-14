@@ -2,15 +2,17 @@
 package service
 
 import (
+	"context"
+
 	"PaginationPlayground/internal/client"
 	"PaginationPlayground/internal/models"
 	"PaginationPlayground/internal/persist"
 )
 
 type ItemService interface {
-	FetchItems(string, string, string) (models.SearchResponse, error)
-	SearchForItems(string) ([]models.SearchItem, error)
-	PersistSearchResponse(models.SearchResponse) error
+	FetchItems(context.Context, string, string, string) (models.SearchResponse, error)
+	SearchForItems(context.Context, string) ([]models.SearchItem, error)
+	PersistSearchResponse(context.Context, models.SearchResponse) error
 }
 
 type OsrsService struct {
@@ -22,24 +24,24 @@ func NewOsrsService(repo persist.ItemRepository, client client.ItemClient) ItemS
 	return &OsrsService{repo, client}
 }
 
-func (s *OsrsService) FetchItems(category string, alpha string, page string) (models.SearchResponse, error) {
-	resp, err := s.itemClient.FetchOsrsData(category, alpha, page)
+func (s *OsrsService) FetchItems(ctx context.Context, category string, alpha string, page string) (models.SearchResponse, error) {
+	resp, err := s.itemClient.FetchOsrsData(ctx, category, alpha, page)
 	if err != nil {
-		return models.SearchResponse{}, nil
+		return models.SearchResponse{}, err
 	}
 	return resp, nil
 }
 
-func (s *OsrsService) SearchForItems(itemName string) ([]models.SearchItem, error) {
-	items, err := s.itemRepo.GetItem(itemName)
+func (s *OsrsService) SearchForItems(ctx context.Context, itemName string) ([]models.SearchItem, error) {
+	items, err := s.itemRepo.GetItem(ctx, itemName)
 	if err != nil {
 		return nil, err
 	}
 	return items, nil
 }
 
-func (s *OsrsService) PersistSearchResponse(respose models.SearchResponse) error {
-	err := s.itemRepo.SaveItems(respose.Items)
+func (s *OsrsService) PersistSearchResponse(ctx context.Context, response models.SearchResponse) error {
+	err := s.itemRepo.SaveItems(ctx, response.Items)
 	if err != nil {
 		return err
 	}

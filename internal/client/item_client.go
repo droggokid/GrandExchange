@@ -2,6 +2,7 @@
 package client
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/url"
@@ -11,7 +12,7 @@ import (
 )
 
 type ItemClient interface {
-	FetchOsrsData(string, string, string) (models.SearchResponse, error)
+	FetchOsrsData(context.Context, string, string, string) (models.SearchResponse, error)
 }
 
 type OsrsClient struct {
@@ -20,11 +21,13 @@ type OsrsClient struct {
 
 func NewOsrsClient() ItemClient {
 	return &OsrsClient{
-		client: http.Client{Timeout: time.Second * 10},
+		client: http.Client{
+			Timeout: time.Second * 10,
+		},
 	}
 }
 
-func (h *OsrsClient) FetchOsrsData(category, alpha, page string) (models.SearchResponse, error) {
+func (h *OsrsClient) FetchOsrsData(ctx context.Context, category, alpha, page string) (models.SearchResponse, error) {
 	u, _ := url.Parse("https://secure.runescape.com/m=itemdb_oldschool/api/catalogue/items.json")
 	q := u.Query()
 	q.Set("category", category)
@@ -32,7 +35,7 @@ func (h *OsrsClient) FetchOsrsData(category, alpha, page string) (models.SearchR
 	q.Set("page", page)
 	u.RawQuery = q.Encode()
 
-	req, _ := http.NewRequest("GET", u.String(), nil)
+	req, _ := http.NewRequestWithContext(ctx, "GET", u.String(), nil)
 	req.Header.Set("User-Agent", "PaginationPlayground/1.0")
 	req.Header.Set("Accept", "application/json")
 

@@ -6,6 +6,7 @@ import (
 
 	"PaginationPlayground/internal/models"
 	"PaginationPlayground/internal/service"
+	"PaginationPlayground/temporal"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,16 +18,17 @@ type ItemHandler interface {
 }
 
 type OsrsHandler struct {
-	itemService service.ItemService
+	itemService    service.ItemService
+	temporalClient temporal.TemporalClient
 }
 
-func NewOsrsHandler(service service.ItemService) ItemHandler {
-	return &OsrsHandler{service}
+func NewOsrsHandler(service service.ItemService, temporalClient temporal.TemporalClient) ItemHandler {
+	return &OsrsHandler{service, temporalClient}
 }
 
 func (h *OsrsHandler) SearchItems(c *gin.Context) {
 	itemName := c.Param("name")
-	items, err := h.itemService.SearchForItems(itemName)
+	items, err := h.temporalClient.StartSearchWorkflow(c.Request.Context(), itemName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -39,7 +41,7 @@ func (h *OsrsHandler) FetchItems(c *gin.Context) (models.SearchResponse, error) 
 	alpha := c.DefaultQuery("alpha", "c")
 	page := c.DefaultQuery("page", "1")
 
-	out, err := h.itemService.FetchItems(category, alpha, page)
+	out, err := h.itemService.FetchItems(c.Request.Context(), category, alpha, page)
 	if err != nil {
 		return models.SearchResponse{}, err
 	}
@@ -54,7 +56,7 @@ func (h *OsrsHandler) FetchAndPersistItems(c *gin.Context) {
 		return
 	}
 
-	if err := h.itemService.PersistSearchResponse(out); err != nil {
+	if err := h.itemService.PersistSearchResponse(c.Request.Context(), out); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

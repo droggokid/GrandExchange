@@ -21,7 +21,7 @@ func NewOsrsActivities(service service.ItemService) ItemActivities {
 }
 
 func (a *OsrsActivities) SearchItemActivity(ctx context.Context, itemName string) (models.SearchActivityResponse, error) {
-	items, err := a.itemService.SearchForItems(itemName)
+	items, err := a.itemService.SearchForItems(ctx, itemName)
 	if err != nil {
 		return models.SearchActivityResponse{}, err
 	}
