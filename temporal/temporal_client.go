@@ -5,6 +5,7 @@ import (
 	"context"
 	"log"
 
+	"PaginationPlayground/internal/config"
 	"PaginationPlayground/internal/models"
 	"PaginationPlayground/internal/service"
 	"PaginationPlayground/temporal/activities"
@@ -23,12 +24,12 @@ type ItemTemporalClient struct {
 	itemService service.ItemService
 }
 
-func NewTemporalClient(service service.ItemService) (TemporalClient, error) {
+func NewTemporalClient(service service.ItemService) (TemporalClient, worker.Worker, error) {
 	t, err := client.Dial(client.Options{
-		HostPort: "192.168.8.50:30233",
+		HostPort: config.TemporalHostPort,
 	})
 	if err != nil {
-		return &ItemTemporalClient{}, err
+		return nil, nil, err
 	}
 
 	w := worker.New(t, OsrsItemsQueue, worker.Options{})
@@ -44,7 +45,7 @@ func NewTemporalClient(service service.ItemService) (TemporalClient, error) {
 		}
 	}()
 
-	return &ItemTemporalClient{Client: t, itemService: service}, nil
+	return &ItemTemporalClient{Client: t, itemService: service}, w, nil
 }
 
 func (t *ItemTemporalClient) StartSearchWorkflow(ctx context.Context, itemName string) ([]models.SearchItem, error) {
