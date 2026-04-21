@@ -4,7 +4,7 @@ package workflows
 import (
 	"time"
 
-	"PaginationPlayground/internal/models"
+	"GrandExchange/internal/models"
 
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"

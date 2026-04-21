@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"time"
 
-	"PaginationPlayground/internal/models"
+	"GrandExchange/internal/models"
 )
 
 type ItemClient interface {
@@ -36,7 +36,7 @@ func (h *OsrsClient) FetchOsrsData(ctx context.Context, category, alpha, page st
 	u.RawQuery = q.Encode()
 
 	req, _ := http.NewRequestWithContext(ctx, "GET", u.String(), nil)
-	req.Header.Set("User-Agent", "PaginationPlayground/1.0")
+	req.Header.Set("User-Agent", "GrandExchange-Hobby-Project/1.0")
 	req.Header.Set("Accept", "application/json")
 
 	resp, err := h.client.Do(req)

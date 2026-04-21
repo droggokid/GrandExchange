@@ -1,6 +1,6 @@
 .PHONY: help build run clean test fmt deps db db-setup db-reset
 
-APP_NAME=pagination-playground
+APP_NAME=GrandExchange
 BINARY_DIR=bin
 MAIN_PATH=./cmd/main.go
 ELM_DIR=ui

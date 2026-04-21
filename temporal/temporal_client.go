@@ -5,11 +5,11 @@ import (
 	"context"
 	"log"
 
-	"PaginationPlayground/internal/config"
-	"PaginationPlayground/internal/models"
-	"PaginationPlayground/internal/service"
-	"PaginationPlayground/temporal/activities"
-	"PaginationPlayground/temporal/workflows"
+	"GrandExchange/internal/config"
+	"GrandExchange/internal/models"
+	"GrandExchange/internal/service"
+	"GrandExchange/temporal/activities"
+	"GrandExchange/temporal/workflows"
 
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"

@@ -11,6 +11,7 @@ import (
 var (
 	DBURL            string
 	TemporalHostPort string
+	RedisAddress     string
 )
 
 func init() {
@@ -21,4 +22,5 @@ func init() {
 
 	DBURL = os.Getenv("DB_URL")
 	TemporalHostPort = os.Getenv("TEMPORAL_HOST_PORT")
+	RedisAddress = os.Getenv("REDIS_ADDRESS")
 }

@@ -4,8 +4,8 @@ package activities
 import (
 	"context"
 
-	"PaginationPlayground/internal/models"
-	"PaginationPlayground/internal/service"
+	"GrandExchange/internal/models"
+	"GrandExchange/internal/service"
 )
 
 type ItemActivities interface {

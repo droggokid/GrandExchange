@@ -9,12 +9,12 @@ import (
 	"syscall"
 	"time"
 
-	osrsClient "PaginationPlayground/internal/client"
-	"PaginationPlayground/internal/config"
-	"PaginationPlayground/internal/handler"
-	"PaginationPlayground/internal/persist"
-	"PaginationPlayground/internal/service"
-	"PaginationPlayground/temporal"
+	osrsClient "GrandExchange/internal/client"
+	"GrandExchange/internal/config"
+	"GrandExchange/internal/handler"
+	"GrandExchange/internal/persist"
+	"GrandExchange/internal/service"
+	"GrandExchange/temporal"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -26,10 +26,14 @@ func main() {
 	dbContext := persist.NewDatabaseContext(ctx, config.DBURL)
 	defer dbContext.Conn.Close()
 
+	redisContext := persist.NewRedisContext()
+	defer redisContext.Rdb.Close()
+
 	itemRepo := persist.NewItemRepository(dbContext)
 
 	itemClient := osrsClient.NewOsrsClient()
 
+	cacheService := service.NewCacheService(redisContext)
 	itemService := service.NewOsrsService(itemRepo, itemClient)
 
 	temporalClient, worker, err := temporal.NewTemporalClient(itemService)
@@ -38,7 +42,7 @@ func main() {
 	}
 	defer worker.Stop()
 
-	itemHandler := handler.NewOsrsHandler(itemService, temporalClient)
+	itemHandler := handler.NewOsrsHandler(itemService, cacheService, temporalClient)
 
 	r := gin.Default()
 
