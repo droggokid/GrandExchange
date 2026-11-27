@@ -2,6 +2,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 
 	"GrandExchange/internal/models"
@@ -30,13 +31,23 @@ func NewOsrsHandler(service service.ItemService, cacheService service.CacheServi
 func (h *OsrsHandler) SearchItems(c *gin.Context) {
 	itemName := c.Param("name")
 
-	cache, err := h.cacheService.Get(c, itemName)
-	if cache != nil {
+	cache, err := h.cacheService.Get(c.Request.Context(), itemName)
+	if err != nil {
+		fmt.Println("Cache error:", err)
+	}
+	if err == nil && cache != nil {
 		items, err := h.temporalClient.StartSearchWorkflow(c.Request.Context(), itemName)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			fmt.Println("Temporal workflow error:", err)
+			items, dbErr := h.itemService.SearchForItems(c.Request.Context(), itemName)
+			if dbErr != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": dbErr.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, models.SearchResponse{Total: len(items), Items: items})
 			return
 		}
+		fmt.Println("Cache hit")
 		c.JSON(http.StatusOK, models.SearchResponse{Total: len(items), Items: items})
 	} else {
 		h.FetchAndPersistItems(c)
@@ -68,6 +79,8 @@ func (h *OsrsHandler) fetchItems(c *gin.Context, alpha string) (models.SearchRes
 	if err != nil {
 		return models.SearchResponse{}, err
 	}
-	h.cacheService.Set(c.Request.Context(), alpha, resp)
+	if err := h.cacheService.Set(c.Request.Context(), alpha, resp); err != nil {
+		fmt.Println("Cache set error:", err)
+	}
 	return models.SearchResponse{Total: resp.Total, Items: resp.Items}, nil
 }

@@ -4,6 +4,7 @@ package client
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"time"
@@ -46,7 +47,7 @@ func (h *OsrsClient) FetchOsrsData(ctx context.Context, category, alpha, page st
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return models.SearchResponse{}, nil
+		return models.SearchResponse{}, fmt.Errorf("RuneScape catalogue returned HTTP %s", resp.Status)
 	}
 
 	var out models.SearchResponse

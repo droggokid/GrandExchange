@@ -3,6 +3,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -27,25 +28,23 @@ func NewOsrsService(repo persist.ItemRepository, client client.ItemClient) ItemS
 }
 
 func (s *OsrsService) FetchItems(ctx context.Context, category string, alpha string, page string) (models.SearchResponse, error) {
-	result := make([]models.SearchItem, 0)
-
-	resp, err := s.itemClient.FetchOsrsData(ctx, category, alpha, page)
-	if err != nil {
-		return models.SearchResponse{}, err
+	firstPage, err := strconv.Atoi(page)
+	if err != nil || firstPage < 1 {
+		return models.SearchResponse{}, fmt.Errorf("invalid catalogue page %q", page)
 	}
 
-	newPage, _ := strconv.Atoi(page)
-	for len(resp.Items) != 0 {
-		newPage++
-		resp, err := s.itemClient.FetchOsrsData(ctx, category, alpha, strconv.Itoa(newPage))
+	items := []models.SearchItem{}
+	for currentPage := firstPage; ; currentPage++ {
+		resp, err := s.itemClient.FetchOsrsData(ctx, category, alpha, strconv.Itoa(currentPage))
 		if err != nil {
 			return models.SearchResponse{}, err
 		}
-		result = append(result, resp.Items...)
+		if len(resp.Items) == 0 {
+			return models.SearchResponse{Total: len(items), Items: items}, nil
+		}
+		items = append(items, resp.Items...)
 		time.Sleep(200 * time.Millisecond) // sleep to avoid rate-limit
 	}
-
-	return models.SearchResponse{Total: resp.Total, Items: result}, nil
 }
 
 func (s *OsrsService) SearchForItems(ctx context.Context, itemName string) ([]models.SearchItem, error) {
